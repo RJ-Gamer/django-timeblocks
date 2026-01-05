@@ -1,0 +1,66 @@
+# ===============================
+# Python
+# ===============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ===============================
+# Django
+# ===============================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations (keep only __init__.py)
+**/migrations/*
+!**/migrations/__init__.py
+
+# ===============================
+# Pytest / Coverage
+# ===============================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ===============================
+# OS / Editors
+# ===============================
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
+
+# ===============================
+# Project-specific
+# ===============================
+
+# Local sandbox Django project (DO NOT COMMIT)
+myp/
+
+# Local test artifacts
+test.sqlite3
+
+# Build artifacts
+pip-wheel-metadata/
+
+# ===============================
+# Packaging
+# ===============================
+*.whl
+*.tar.gz
+*.egg
