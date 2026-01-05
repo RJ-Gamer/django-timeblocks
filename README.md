@@ -1,19 +1,17 @@
-## `README.md`
-
-````md
 # timeblocks
 
 A reusable Django library for creating and managing time blocks using
 safe, deterministic recurrence rules.
 
-Designed for scheduling systems where correctness, idempotency, and
-data safety matter.
+Designed for scheduling systems where **correctness, idempotency, and
+data safety** matter.
 
 ---
 
 ## Why timeblocks?
 
 Most scheduling implementations break when:
+
 - recurrence rules change
 - slots are regenerated
 - bookings must be preserved
@@ -24,7 +22,7 @@ Most scheduling implementations break when:
 
 - slots are generated from immutable templates
 - destructive operations are explicit and scoped
-- booked (locked) slots are never modified
+- locked (booked) slots are never modified
 - regeneration is safe and idempotent
 - all datetime values are normalized to UTC
 
@@ -33,7 +31,9 @@ Most scheduling implementations break when:
 ## Core Concepts
 
 ### SlotSeries (template)
+
 A `SlotSeries` defines *how* slots should exist:
+
 - start date
 - time window
 - recurrence rule
@@ -42,8 +42,11 @@ A `SlotSeries` defines *how* slots should exist:
 It does **not** generate slots by itself.
 
 ### Slot (instance)
+
 A `Slot` is a concrete time interval generated from a series.
+
 Slots may be:
+
 - open
 - locked (e.g. booked)
 - soft-deleted (historical)
@@ -54,10 +57,11 @@ Slots may be:
 
 - `NONE` — single occurrence
 - `DAILY` — every N days
-- `WEEKLY` — specific weekdays (Mon/Wed/Fri, etc.)
+- `WEEKLY` — specific weekdays (e.g. Mon/Wed/Fri)
 - `WEEKDAY_MON_FRI` — Monday to Friday
 
-More recurrence types can be added safely.
+Additional recurrence types can be added safely without breaking
+existing data.
 
 ---
 
@@ -65,7 +69,7 @@ More recurrence types can be added safely.
 
 ```bash
 pip install timeblocks
-````
+```
 
 Add to Django settings:
 
@@ -119,6 +123,8 @@ This will create:
 When a recurrence rule changes, regenerate safely:
 
 ```python
+from timeblocks.services.series_service import SeriesService
+
 SeriesService.regenerate_series(
     series=series,
     scope="future",  # or "all"
@@ -137,6 +143,8 @@ SeriesService.regenerate_series(
 ## Cancelling a Series
 
 ```python
+from timeblocks.services.series_service import SeriesService
+
 SeriesService.cancel_series(series=series)
 ```
 
@@ -150,13 +158,13 @@ Effects:
 
 ## Safety Guarantees
 
-timeblocks enforces the following invariants:
+`timeblocks` enforces the following invariants:
 
 * no duplicate slots per series
 * locked slots are immutable
 * destructive operations are explicit
 * all writes are transactional
-* no database-specific constraints required
+* no database-specific constraints are required
 
 ---
 
@@ -181,12 +189,10 @@ These belong in your application layer.
 
 ## Versioning & Upgrades
 
-timeblocks follows semantic versioning.
+`timeblocks` follows semantic versioning.
 
-- PATCH releases fix bugs without changing behavior
-- MINOR releases add new recurrence types or capabilities
-- MAJOR releases may change behavior or contracts
+* PATCH releases fix bugs without changing behavior
+* MINOR releases add new recurrence types or capabilities
+* MAJOR releases may change behavior or contracts
 
-Breaking changes will always be documented in the changelog.
-
----
+Breaking changes are always documented in the changelog.
