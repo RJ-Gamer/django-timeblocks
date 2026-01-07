@@ -1,4 +1,7 @@
+import calendar
 from datetime import date, datetime, timedelta
+
+from dateutil.relativedelta import relativedelta
 
 from timeblocks.conf import timeblocks_settings
 from timeblocks.constants import EndType, RecurrenceType, SlotStatus
@@ -67,6 +70,65 @@ def iter_daily_dates(series: SlotSeries):
         current_date += timedelta(days=series.interval)
 
 
+def nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date:
+    cal = calendar.Calendar()
+    candidates = [
+        day
+        for day in cal.itermonthdates(year, month)
+        if day.month == month and day.weekday() == weekday
+    ]
+    if not candidates:
+        return None
+
+    if n == -1:
+        return candidates[-1]
+
+    if 1 <= n <= len(candidates):
+        return candidates[n - 1]
+
+    return None
+
+
+def iter_monthly_nth_dates(series):
+    if not series.by_weekdays or len(series.by_weekdays) != 1:
+        raise InvalidRecurrence("MONTHLY_NTH requires exactly one weekday")
+
+    if series.week_of_month not in {1, 2, 3, 4, -1}:
+        raise InvalidRecurrence("Invalid week_of_month value")
+
+    weekday = WEEKDAY_MAP[series.by_weekdays[0]]
+
+    current = series.start_date.replace(day=1)
+    generated = 0
+    iterations = 0
+    max_guard = timeblocks_settings.MAX_OCCURENCES * 2
+
+    while True:
+        if should_stop(
+            generated=generated,
+            current_date=current,
+            series=series,
+        ):
+            break
+
+        candidate = nth_weekday_of_month(
+            current.year,
+            current.month,
+            weekday,
+            series.week_of_month,
+        )
+
+        if candidate and candidate >= series.start_date:
+            yield candidate
+            generated += 1
+
+        current += relativedelta(months=series.interval)
+        iterations += 1
+
+        if iterations > max_guard:
+            raise InvalidRecurrence("MONTHLY_NTH exceeded safety bounds")
+
+
 def iter_weekly_dates(series: SlotSeries, override_weekdays=None):
     max_guard = timeblocks_settings.MAX_OCCURENCES
     weekdays = override_weekdays or series.by_weekdays
@@ -124,6 +186,9 @@ def iter_occurrence_dates(series: SlotSeries):
         )
         return
 
+    if series.recurrence_type == RecurrenceType.MONTH_NTH.value:
+        yield from iter_monthly_nth_dates(series)
+        return
     raise InvalidRecurrence(f"Unsupported recurrence type: {series.recurrence_type}")
 
 
@@ -155,4 +220,5 @@ def build_slot_instances(series: SlotSeries):
             status=SlotStatus.OPEN.value,
         )
 
+        produced += 1
         produced += 1

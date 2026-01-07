@@ -168,6 +168,20 @@ Effects:
 
 ---
 
+## Common Gotchas & Best Practices
+
+### ❗ Django Context Required
+`timeblocks` is a Django app. Models and services must be used
+inside a configured Django environment (e.g. `manage.py shell`).
+
+### ❗ Soft Deletes
+Slots are soft-deleted. Always query with:
+
+```python
+Slot.objects.filter(is_deleted=False)
+```
+
+---
 ## What timeblocks Does NOT Do
 
 * booking logic
