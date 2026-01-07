@@ -29,3 +29,10 @@ and follows Semantic Versioning.
 
 ---
 
+## [0.1.1]
+
+### Fixed
+- Fixed missing dependency declaration for `python-dateutil`
+- Fixed timezone normalization compatibility with Django 4+
+
+---
