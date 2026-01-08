@@ -48,3 +48,13 @@ and follows Semantic Versioning.
 - Safe upgrade from 0.1.1 to 0.1.2
 
 ---
+## [0.1.3] — 2026-01-08
+
+### Fixed
+- README badge rendering on PyPI and GitHub
+- Declared supported Python versions via `requires-python`
+
+### Notes
+- Metadata-only release
+- No behavior or API changes
+---

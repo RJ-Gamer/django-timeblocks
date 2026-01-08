@@ -1,4 +1,10 @@
-# timeblocks
+![PyPI](https://img.shields.io/pypi/v/timeblocks)
+![Stability](https://img.shields.io/badge/stability-pre--v1-success)
+![Concurrency](https://img.shields.io/badge/concurrency-safe-success)
+![License](https://img.shields.io/pypi/l/timeblocks)
+
+
+# Timeblocks
 
 A reusable Django library for creating and managing time blocks using
 safe, deterministic recurrence rules.
@@ -17,6 +23,7 @@ Most scheduling implementations break when:
 - bookings must be preserved
 - timezones drift
 - duplicate slots appear
+- concurrent actions occur (booking vs updates)
 
 **timeblocks** solves these problems by enforcing strict invariants:
 
@@ -25,6 +32,26 @@ Most scheduling implementations break when:
 - locked (booked) slots are never modified
 - regeneration is safe and idempotent
 - all datetime values are normalized to UTC
+- concurrency is handled explicitly, not implicitly
+
+---
+
+## Mental Model (Read This First)
+
+`timeblocks` separates **intent** from **reality**.
+
+- **SlotSeries** represents *intent*  
+  > “This resource should be available every Mon/Wed/Fri from 10–11”
+
+- **Slot** represents *reality*  
+  > A concrete time interval that exists, may be booked, or may be cancelled
+
+This separation is intentional and fundamental.
+
+**SlotSeries is the source of truth.  
+Slots are generated artifacts.**
+
+Slots must never be treated as authoritative configuration.
 
 ---
 
@@ -39,7 +66,7 @@ A `SlotSeries` defines *how* slots should exist:
 - recurrence rule
 - termination condition
 
-It does **not** generate slots by itself.
+It does **not** represent bookings or history.
 
 ### Slot (instance)
 
@@ -50,6 +77,27 @@ Slots may be:
 - open
 - locked (e.g. booked)
 - soft-deleted (historical)
+
+Once a slot is locked, it becomes immutable.
+
+---
+
+## Lifecycle Semantics
+
+A typical lifecycle looks like this:
+
+1. A `SlotSeries` is created
+2. Concrete `Slot` rows are generated
+3. Some slots become locked (e.g. booked)
+4. The series may be regenerated or cancelled
+5. Historical slots are preserved
+
+Important rules:
+
+- Regeneration **never modifies locked slots**
+- Cancellation **never deletes historical data**
+- Slots are soft-deleted, never hard-deleted
+- Operations are safe to retry (idempotent)
 
 ---
 
@@ -136,7 +184,7 @@ SeriesService.regenerate_series(
 * locked slots are never touched
 * soft-deleted slots are preserved
 * scope controls blast radius
-* operation is atomic
+* operation is atomic and idempotent
 
 ---
 
@@ -156,35 +204,63 @@ Effects:
 
 ---
 
-## Safety Guarantees
+## Invariants & Guarantees
 
-`timeblocks` enforces the following invariants:
+`timeblocks` enforces the following invariants at all times:
 
-* no duplicate slots per series
+* a slot can never be booked twice
 * locked slots are immutable
+* regeneration is scoped and deterministic
+* cancellation preserves historical data
 * destructive operations are explicit
 * all writes are transactional
-* no database-specific constraints are required
+* all datetime values are normalized to UTC
+
+Violation of these invariants is considered a bug.
+
+---
+
+## Concurrency & Safety
+
+`timeblocks` is designed to be safe under concurrent access.
+
+Key principles:
+
+* booking must use row-level locking (`select_for_update`)
+* regeneration and cancellation lock affected rows before mutation
+* destructive operations never race with bookings
+
+**Do not** implement booking or regeneration logic outside the provided
+services unless you fully understand the concurrency implications.
 
 ---
 
 ## Common Gotchas & Best Practices
 
 ### ❗ Django Context Required
+
 `timeblocks` is a Django app. Models and services must be used
 inside a configured Django environment (e.g. `manage.py shell`).
 
 ### ❗ Soft Deletes
-Slots are soft-deleted. Always query with:
+
+Slots are soft-deleted. Always query active availability with:
 
 ```python
 Slot.objects.filter(is_deleted=False)
 ```
 
+### ❗ Do Not Edit Slots Directly
+
+Slots are generated artifacts. Always mutate schedules via
+`SlotSeries` and service methods.
+
 ---
+
 ## What timeblocks Does NOT Do
 
 * booking logic
+* payments
 * permissions
 * notifications
 * UI or API views
@@ -197,9 +273,9 @@ These belong in your application layer.
 
 The following interfaces are considered stable starting from v1.0:
 
-- Slot, SlotSeries models
-- SeriesService public methods
-- Published enums and query helpers
+* `Slot`, `SlotSeries` models
+* `SeriesService` public methods
+* Published enums and query helpers
 
 Internal modules and helpers are not part of the public API
 and may change without notice.
