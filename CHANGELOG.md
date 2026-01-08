@@ -29,10 +29,22 @@ and follows Semantic Versioning.
 
 ---
 
-## [0.1.1]
+## [0.1.1] - 2026-01-06
 
 ### Fixed
 - Fixed missing dependency declaration for `python-dateutil`
 - Fixed timezone normalization compatibility with Django 4+
+
+---
+
+## [0.1.2] - 2026-01-08
+
+### Added
+- Added safe Django admin for SlotSeries and Slot inspection
+- Improved developer ergonomics (no behavior changes)
+
+### Notes
+- No behavior or API changes
+- Safe upgrade from 0.1.1 to 0.1.2
 
 ---

@@ -4,6 +4,8 @@ from django.db import models
 
 from timeblocks.constants import Mode, SlotStatus
 
+from .querysets import SlotQueryset
+
 
 class TimeStampModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -54,11 +56,28 @@ class Slot(TimeStampModel):
 
     metadata = models.JSONField(default=dict, blank=True)
 
+    objects = SlotQueryset.as_manager()
+
     class Meta:
         ordering = ["start"]
+
         indexes = [
-            models.Index(fields=["content_type", "object_id", "start"]),
-            models.Index(fields=["series_id", "start"]),
+            # Availability listing (HOT PATH)
+            models.Index(
+                fields=["is_deleted", "is_locked", "start"],
+                name="slot_availability_idx",
+            ),
+            # Series regeneration / cancellation
+            models.Index(
+                fields=["series_id", "start", "is_locked"],
+                name="slot_series_regen_idx",
+            ),
+            # Owner-based queries (already good)
+            models.Index(
+                fields=["content_type", "object_id", "start"],
+                name="slot_owner_time_idx",
+            ),
         ]
+
         verbose_name = "Slot"
         verbose_name_plural = "Slots"
