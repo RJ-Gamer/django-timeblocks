@@ -193,6 +193,19 @@ These belong in your application layer.
 
 ---
 
+## Public API Stability
+
+The following interfaces are considered stable starting from v1.0:
+
+- Slot, SlotSeries models
+- SeriesService public methods
+- Published enums and query helpers
+
+Internal modules and helpers are not part of the public API
+and may change without notice.
+
+---
+
 ## Compatibility
 
 * Django >= 3.2
