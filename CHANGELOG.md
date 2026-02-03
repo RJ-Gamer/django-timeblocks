@@ -58,3 +58,19 @@ and follows Semantic Versioning.
 - Metadata-only release
 - No behavior or API changes
 ---
+
+## [0.2.0] — 2026-02-02
+
+### Hardened
+- Eliminated booking vs regeneration race conditions
+- Eliminated booking vs cancellation race conditions
+- Enforced row-level locking for destructive operations
+- Improved slot safety under concurrent access
+
+### Performance
+- Added production-grade indexes for availability and regeneration
+
+### Notes
+- No API changes
+- Stronger correctness guarantees under concurrency
+- Recommended upgrade for all users
