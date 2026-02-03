@@ -89,7 +89,8 @@ class SeriesService:
         if cutoff:
             slots_qs = slots_qs.filter(start__gte=cutoff)
 
-        slots_qs.select_for_update().update(is_deleted=True)
+        locked_slots = slots_qs.select_for_update()
+        locked_slots.update(is_deleted=True)
 
         slot_candidates = list(build_slot_instances(series=series))
 
@@ -124,9 +125,9 @@ class SeriesService:
         series.is_active = False
         series.save(update_fields=["is_active"])
 
-        Slot.objects.select_for_update().filter(
+        Slot.objects.filter(
             series_id=series.series_id,
             is_deleted=False,
             is_locked=False,
             start__gte=now,
-        ).update(is_deleted=True)
+        ).select_for_update().update(is_deleted=True)

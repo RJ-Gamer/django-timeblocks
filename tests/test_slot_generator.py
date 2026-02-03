@@ -107,3 +107,27 @@ def test_weekday_mon_fri_skips_weekends():
         date(2025, 1, 8),  # Wed
         date(2025, 1, 9),  # Thu
     ]
+
+
+def test_weekdays_after_occurrences():
+    series = make_series(
+        recurrence_type=RecurrenceType.WEEKDAYS.value,
+        start_date=date(2025, 1, 6),  # Monday
+        occurrence_count=3,
+    )
+
+    dates = list(iter_occurrence_dates(series))
+    assert len(dates) == 3
+
+
+def test_weekdays_skips_weekends():
+    series = make_series(
+        recurrence_type=RecurrenceType.WEEKDAYS.value,
+        start_date=date(2025, 1, 3),  # Friday
+        occurrence_count=5,
+    )
+
+    dates = list(iter_occurrence_dates(series))
+
+    # Fri, Mon, Tue, Wed, Thu
+    assert [d.weekday() for d in dates] == [4, 0, 1, 2, 3]

@@ -74,3 +74,13 @@ and follows Semantic Versioning.
 - No API changes
 - Stronger correctness guarantees under concurrency
 - Recommended upgrade for all users
+
+## [0.2.1] — 2026-02-02
+
+### Fixed
+- Implemented `WEEKDAYS` recurrence with explicit weekday selection
+- Clarified and enforced semantics between `WEEKDAYS` and `WEEKDAY_MON_FRI`
+
+### Notes
+- No breaking changes
+- No behavior change for existing valid configurations

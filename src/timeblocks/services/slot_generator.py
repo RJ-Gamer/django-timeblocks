@@ -43,6 +43,23 @@ def validate_series(series: SlotSeries) -> None:
     if series.end_type == EndType.ON_DATE.value and not series.end_date:
         raise InvalidRecurrence("End date must be specified for 'on date' end type.")
 
+    if series.recurrence_type == RecurrenceType.WEEKDAY_MON_FRI.value:
+        if series.by_weekdays:
+            raise InvalidRecurrence(
+                "WEEKDAY_MON_FRI is a preset and does not accept by_weekdays. "
+                "Use WEEKDAYS for custom weekday selection."
+            )
+
+        if series.interval != 1:
+            raise InvalidRecurrence("WEEKDAY_MON_FRI does not support interval > 1.")
+
+    if series.recurrence_type == RecurrenceType.WEEKDAYS.value:
+        if not series.by_weekdays:
+            raise InvalidRecurrence(
+                "WEEKDAYS recurrence requires by_weekdays "
+                "(e.g. ['MON', 'WED', 'FRI'])."
+            )
+
 
 def should_stop(*, generated: int, current_date: date, series: SlotSeries) -> bool:
     if (
@@ -70,7 +87,7 @@ def iter_daily_dates(series: SlotSeries):
         current_date += timedelta(days=series.interval)
 
 
-def nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date:
+def nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date | None:
     cal = calendar.Calendar()
     candidates = [
         day
@@ -170,6 +187,7 @@ def iter_weekly_dates(series: SlotSeries, override_weekdays=None):
 def iter_occurrence_dates(series: SlotSeries):
     if series.recurrence_type == RecurrenceType.NONE.value:
         yield series.start_date
+        return
 
     if series.recurrence_type == RecurrenceType.DAILY.value:
         yield from iter_daily_dates(series)
@@ -186,9 +204,17 @@ def iter_occurrence_dates(series: SlotSeries):
         )
         return
 
+    if series.recurrence_type == RecurrenceType.WEEKDAYS.value:
+        yield from iter_weekly_dates(
+            series,
+            override_weekdays=set(series.by_weekdays),
+        )
+        return
+
     if series.recurrence_type == RecurrenceType.MONTH_NTH.value:
         yield from iter_monthly_nth_dates(series)
         return
+
     raise InvalidRecurrence(f"Unsupported recurrence type: {series.recurrence_type}")
 
 
@@ -220,5 +246,4 @@ def build_slot_instances(series: SlotSeries):
             status=SlotStatus.OPEN.value,
         )
 
-        produced += 1
         produced += 1

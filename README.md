@@ -106,7 +106,8 @@ Important rules:
 - `NONE` — single occurrence
 - `DAILY` — every N days
 - `WEEKLY` — specific weekdays (e.g. Mon/Wed/Fri)
-- `WEEKDAY_MON_FRI` — Monday to Friday
+- `WEEKDAY_MON_FRI` — Every weekday (Monday–Friday, preset)
+- `WEEKDAYS` — Custom weekdays (e.g. Mon/Wed/Fri)
 
 Additional recurrence types can be added safely without breaking
 existing data.
@@ -254,6 +255,9 @@ Slot.objects.filter(is_deleted=False)
 
 Slots are generated artifacts. Always mutate schedules via
 `SlotSeries` and service methods.
+
+Use `WEEKDAY_MON_FRI` for a fixed Monday–Friday schedule.
+Use `WEEKDAYS` when you need custom weekday selection.
 
 ---
 
