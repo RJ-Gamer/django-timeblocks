@@ -110,3 +110,12 @@ and production-ready, including:
 ### Notes
 - No breaking changes from 0.x
 - This release formalizes long-term support expectations
+
+## [1.0.1] — 2026-02-04
+
+### Documentation
+- Improved README clarity and consistency
+- Added usage examples
+
+### Notes
+- No functional or behavioral changes

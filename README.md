@@ -1,5 +1,5 @@
 ![PyPI](https://img.shields.io/pypi/v/timeblocks)
-![Stability](https://img.shields.io/badge/stability-pre--v1-success)
+![Stability](https://img.shields.io/badge/stability-v1.0-success)
 ![Concurrency](https://img.shields.io/badge/concurrency-safe-success)
 ![License](https://img.shields.io/pypi/l/timeblocks)
 
@@ -14,7 +14,6 @@ data safety** matter.
 
 ---
 
----
 
 ## Stability & API Guarantees (v1.0+)
 
@@ -308,19 +307,6 @@ Use `MONTH_NTH` with interval=12 if exact dates are required.
 * UI or API views
 
 These belong in your application layer.
-
----
-
-## Public API Stability
-
-The following interfaces are considered stable starting from v1.0:
-
-* `Slot`, `SlotSeries` models
-* `SeriesService` public methods
-* Published enums and query helpers
-
-Internal modules and helpers are not part of the public API
-and may change without notice.
 
 ---
 
