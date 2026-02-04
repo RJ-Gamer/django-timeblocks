@@ -119,3 +119,13 @@ and production-ready, including:
 
 ### Notes
 - No functional or behavioral changes
+
+## [1.0.2] — 2026-02-04
+
+### Documentation & Examples
+- Added real-world usage examples
+- Improved README clarity and structure
+- Added community feedback and discussion guidance
+
+### Notes
+- No functional or behavioral changes
