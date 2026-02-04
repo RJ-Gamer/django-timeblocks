@@ -14,6 +14,33 @@ data safety** matter.
 
 ---
 
+---
+
+## Stability & API Guarantees (v1.0+)
+
+Starting from version **1.0.0**, `timeblocks` provides the following guarantees:
+
+### Stable Public API
+The following interfaces are considered stable and will not change
+in backward-incompatible ways without a MAJOR version bump:
+
+- `Slot` and `SlotSeries` models
+- `RecurrenceType` and `EndType` enums
+- `SeriesService` public methods
+
+### Internal APIs
+Internal helpers, generators, and validation utilities are **not**
+part of the public API and may change between minor releases.
+
+### Versioning
+`timeblocks` follows semantic versioning:
+
+- **MAJOR** — breaking changes
+- **MINOR** — new features or recurrence types
+- **PATCH** — bug fixes and correctness improvements
+
+---
+
 ## Why timeblocks?
 
 Most scheduling implementations break when:
@@ -108,6 +135,9 @@ Important rules:
 - `WEEKLY` — specific weekdays (e.g. Mon/Wed/Fri)
 - `WEEKDAY_MON_FRI` — Every weekday (Monday–Friday, preset)
 - `WEEKDAYS` — Custom weekdays (e.g. Mon/Wed/Fri)
+- `MONTH_NTH` — Nth weekday of the month (e.g. first Monday, third Friday)
+- `MONTH_LAST` — Last weekday of the month (e.g. last Friday)
+- `YEARLY` — Nth weekday of a specific month (e.g. first Monday of January)
 
 Additional recurrence types can be added safely without breaking
 existing data.
@@ -258,6 +288,14 @@ Slots are generated artifacts. Always mutate schedules via
 
 Use `WEEKDAY_MON_FRI` for a fixed Monday–Friday schedule.
 Use `WEEKDAYS` when you need custom weekday selection.
+`MONTH_NTH` supports only week_of_month values 1–4.
+
+Rules like "5th Monday" are intentionally unsupported.
+
+`MONTH_LAST` always refers to the final occurrence of a weekday in a month, not a fixed week number.
+
+`YEARLY` recurrence does not support fixed calendar dates (e.g. Jan 15).
+Use `MONTH_NTH` with interval=12 if exact dates are required.
 
 ---
 

@@ -60,6 +60,38 @@ def validate_series(series: SlotSeries) -> None:
                 "(e.g. ['MON', 'WED', 'FRI'])."
             )
 
+    if series.recurrence_type == RecurrenceType.MONTH_NTH.value:
+        if not series.by_weekdays or len(series.by_weekdays) != 1:
+            raise InvalidRecurrence(
+                "MONTH_NTH recurrence requires exactly one value in by_weekdays."
+            )
+        if series.week_of_month not in {1, 2, 3, 4}:
+            raise InvalidRecurrence(
+                "MONTH_NTH requires week_of_month to be 1, 2, 3, or 4."
+            )
+
+    if series.recurrence_type == RecurrenceType.MONTH_LAST.value:
+        if not series.by_weekdays or len(series.by_weekdays) != 1:
+            raise InvalidRecurrence(
+                "MONTH_LAST recurrence requires exactly one value in by_weekdays."
+            )
+        series.week_of_month = -1
+
+    if series.recurrence_type == RecurrenceType.YEARLY.value:
+        if not series.month_of_year or not (1 <= series.month_of_year <= 12):
+            raise InvalidRecurrence(
+                "YEARLY recurrence requires month_of_year to be set and between 1 and 12."
+            )
+
+        if not series.by_weekdays or len(series.by_weekdays) != 1:
+            raise InvalidRecurrence(
+                "YEARLY recurrence requires exactly one value in by_weekdays."
+            )
+        if series.week_of_month not in {1, 2, 3, 4, -1}:
+            raise InvalidRecurrence(
+                "YEARLY recurrence requires week_of_month to be 1, 2, 3, 4, or -1(last week)."
+            )
+
 
 def should_stop(*, generated: int, current_date: date, series: SlotSeries) -> bool:
     if (
@@ -106,14 +138,15 @@ def nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date | 
     return None
 
 
-def iter_monthly_nth_dates(series):
+def iter_MONTH_NTH_dates(series):
     if not series.by_weekdays or len(series.by_weekdays) != 1:
-        raise InvalidRecurrence("MONTHLY_NTH requires exactly one weekday")
+        raise InvalidRecurrence("MONTH_NTH requires exactly one weekday")
 
     if series.week_of_month not in {1, 2, 3, 4, -1}:
         raise InvalidRecurrence("Invalid week_of_month value")
 
     weekday = WEEKDAY_MAP[series.by_weekdays[0]]
+    interval = series.interval or 0
 
     current = series.start_date.replace(day=1)
     generated = 0
@@ -121,29 +154,26 @@ def iter_monthly_nth_dates(series):
     max_guard = timeblocks_settings.MAX_OCCURENCES * 2
 
     while True:
-        if should_stop(
-            generated=generated,
-            current_date=current,
-            series=series,
-        ):
+        candidate = nth_weekday_of_month(
+            current.year, current.month, weekday, series.week_of_month
+        )
+        probe_date = candidate or current
+        if should_stop(generated=generated, current_date=probe_date, series=series):
             break
 
         candidate = nth_weekday_of_month(
-            current.year,
-            current.month,
-            weekday,
-            series.week_of_month,
+            current.year, current.month, weekday, series.week_of_month
         )
 
         if candidate and candidate >= series.start_date:
             yield candidate
             generated += 1
 
-        current += relativedelta(months=series.interval)
+        current += relativedelta(months=interval)
         iterations += 1
 
         if iterations > max_guard:
-            raise InvalidRecurrence("MONTHLY_NTH exceeded safety bounds")
+            raise InvalidRecurrence("MONTH_NTH exceeded safety bounds")
 
 
 def iter_weekly_dates(series: SlotSeries, override_weekdays=None):
@@ -184,6 +214,34 @@ def iter_weekly_dates(series: SlotSeries, override_weekdays=None):
             current_date += timedelta(weeks=series.interval - 1)
 
 
+def iter_yearly_nth_dates(series: SlotSeries):
+    interval = series.interval or 1
+    weekday = WEEKDAY_MAP[series.by_weekdays[0]]
+
+    generated = 0
+    iterations = 0
+    max_guard = timeblocks_settings.MAX_OCCURENCES * 2
+    year = series.start_date.year
+
+    while True:
+        candidate = nth_weekday_of_month(
+            year, series.month_of_year, weekday, series.week_of_month
+        )
+        probe_date = candidate or date(year, series.month_of_year, 1)
+        if should_stop(generated=generated, current_date=probe_date, series=series):
+            break
+
+        if candidate and candidate >= series.start_date:
+            yield candidate
+            generated += 1
+
+        year += interval
+        iterations += 1
+
+        if iterations > max_guard:
+            raise InvalidRecurrence("Yearly recurrence exceeded safety bounds")
+
+
 def iter_occurrence_dates(series: SlotSeries):
     if series.recurrence_type == RecurrenceType.NONE.value:
         yield series.start_date
@@ -212,7 +270,16 @@ def iter_occurrence_dates(series: SlotSeries):
         return
 
     if series.recurrence_type == RecurrenceType.MONTH_NTH.value:
-        yield from iter_monthly_nth_dates(series)
+        yield from iter_MONTH_NTH_dates(series)
+        return
+
+    if series.recurrence_type == RecurrenceType.MONTH_LAST.value:
+        series.week_of_month = -1
+        yield from iter_MONTH_NTH_dates(series)
+        return
+
+    if series.recurrence_type == RecurrenceType.YEARLY.value:
+        yield from iter_yearly_nth_dates(series)
         return
 
     raise InvalidRecurrence(f"Unsupported recurrence type: {series.recurrence_type}")

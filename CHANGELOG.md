@@ -84,3 +84,29 @@ and follows Semantic Versioning.
 ### Notes
 - No breaking changes
 - No behavior change for existing valid configurations
+
+
+## [1.0.0] — 2026-02-04
+
+### Stable Release
+
+`timeblocks` is now considered stable.
+
+All declared recurrence types are fully implemented, tested,
+and production-ready, including:
+
+- Daily
+- Weekly
+- Weekdays (custom and preset)
+- Monthly (Nth weekday and last weekday)
+- Yearly (Nth weekday of a specific month)
+
+### Guarantees
+- Deterministic slot generation
+- Safe regeneration and cancellation
+- Concurrency-safe operations
+- Stable public API from v1.0 onwards
+
+### Notes
+- No breaking changes from 0.x
+- This release formalizes long-term support expectations
